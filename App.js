@@ -2,6 +2,9 @@ import React from "react";
 import ApolloClient, { createNetworkInterface } from "apollo-client";
 import { ApolloProvider } from "react-apollo";
 import { Font } from "expo";
+import { compose, createStore, combineReducers, applyMiddleware } from "redux";
+import { offline } from "redux-offline";
+import config from "redux-offline/lib/defaults";
 
 import { component as Root } from "./lib/js/re/root";
 
@@ -16,6 +19,12 @@ const networkInterface = createNetworkInterface({
 const client = new ApolloClient({
   networkInterface
 });
+
+const store = createStore(
+  combineReducers({ apollo: client.reducer() }),
+  undefined,
+  compose(applyMiddleware(client.middleware()), offline(config))
+);
 
 export default class App extends React.Component {
   state = {
@@ -37,7 +46,7 @@ export default class App extends React.Component {
 
   render() {
     return this.state.fontLoaded
-      ? <ApolloProvider client={client}>
+      ? <ApolloProvider client={client} store={store}>
           <Root />
         </ApolloProvider>
       : null;

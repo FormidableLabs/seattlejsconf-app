@@ -107,7 +107,8 @@ let styles =
             )
           ],
         "scrollView": style [flex 1.],
-        "contentContainer": style [paddingBottom 10., flexGrow 1.],
+        "contentContainer":
+          style [paddingBottom 10., flexGrow 1., width (float_of_int windowWidth)],
         "modal": style [position `absolute, bottom 5., right 5., width 25., height 25.],
         "date":
           style [

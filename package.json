@@ -31,6 +31,8 @@
     "react-apollo": "^1.4.7",
     "react-native": "^0.45.1",
     "react-navigation": "^1.0.0-beta.11",
-    "reason-react": "^0.2.3"
+    "reason-react": "^0.2.3",
+    "redux": "^3.7.2",
+    "redux-offline": "^2.0.0"
   }
 }
