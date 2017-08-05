@@ -1,0 +1,6 @@
+node_modules/
+lib
+.expo/
+.vscode/
+.merlin
+npm-debug.*

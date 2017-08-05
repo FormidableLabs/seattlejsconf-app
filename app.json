@@ -1,0 +1,35 @@
+{
+  "expo": {
+    "sdkVersion": "18.0.0",
+    "name": "SeattleJS",
+    "description": "SeattleJS Conf App",
+    "icon": "./static/icon.png",
+    "privacy": "public",
+    "version": "1.0.1",
+    "orientation": "portrait",
+    "primaryColor": "#366173",
+    "loading": {
+      "icon": "./static/loading.png",
+      "backgroundImage": "./static/splash.png",
+      "backgroundColor": "#366173",
+      "hideExponentText": true
+    },
+    "slug": "seattle-js",
+    "ios": {
+      "bundleIdentifier": "com.kenwheeler.seattlejs",
+      "supportsTablet": false
+    },
+    "android": {
+      "package": "com.kenwheeler.seattlejs",
+      "versionCode": 2,
+      "config": {
+        "googleMaps": {
+          "apiKey": "YOUR_GOOGLE_API_KEY_GOES_HERE"
+        }
+      }
+    },
+    "packagerOpts": {
+      "assetExts": ["ttf"]
+    }
+  }
+}
