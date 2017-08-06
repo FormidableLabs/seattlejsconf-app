@@ -1,25 +1,5 @@
 open ReactNative;
 
-type item =
-  Js.t {
-    .
-    id : string,
-    start : string,
-    talk :
-      Js.null_undefined (
-        Js.t {
-          .
-          title : string,
-          description : string,
-          speakers :
-            Js.Array.t (
-              Js.t {. id : string, name : string, bio : string, photo : Js.t {. secret : string}}
-            )
-        }
-      ),
-    title : string
-  };
-
 let styles =
   StyleSheet.create
     Style.(
@@ -39,7 +19,7 @@ let styles =
 
 let component = ReasonReact.statelessComponent "ScheduleItem";
 
-let make item::(item: item) _children => {
+let make item::(item: Item.t) _children => {
   ...component,
   render: fun _self =>
     <View style=styles##item>

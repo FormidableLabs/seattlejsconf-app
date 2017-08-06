@@ -4,26 +4,6 @@ type _state = {mutable elementRef: option ReasonReact.reactRef};
 
 let setRef theRef {ReasonReact.state: state} => state.elementRef = Js.Null.to_opt theRef;
 
-type item =
-  Js.t {
-    .
-    id : string,
-    start : string,
-    talk :
-      Js.null_undefined (
-        Js.t {
-          .
-          title : string,
-          description : string,
-          speakers :
-            Js.Array.t (
-              Js.t {. id : string, name : string, bio : string, photo : Js.t {. secret : string}}
-            )
-        }
-      ),
-    title : string
-  };
-
 let styles =
   StyleSheet.create
     Style.(
@@ -45,8 +25,8 @@ let styles =
 let component = ReasonReact.statefulComponent "TalkItem";
 
 let make
-    item::(item: item)
-    ::talk
+    item::(item: Item.t)
+    talk::(talk: Item.talk)
     index::(index: int)
     modalOpen::(modalOpen: bool)
     selectedIndex::(selectedIndex: int)

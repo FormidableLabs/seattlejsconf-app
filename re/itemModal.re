@@ -2,26 +2,6 @@ open ReactNative;
 
 type _state = {scrollRef: option ReasonReact.reactRef};
 
-type item =
-  Js.t {
-    .
-    id : string,
-    start : string,
-    talk :
-      Js.null_undefined (
-        Js.t {
-          .
-          title : string,
-          description : string,
-          speakers :
-            Js.Array.t (
-              Js.t {. id : string, name : string, bio : string, photo : Js.t {. secret : string}}
-            )
-        }
-      ),
-    title : string
-  };
-
 let setRef theRef _ => ReasonReact.SilentUpdate {scrollRef: Js.Null.to_opt theRef};
 
 let styles =
@@ -45,7 +25,7 @@ let styles =
 let component = ReasonReact.statefulComponent "ItemModal";
 
 let make
-    item::(item: item)
+    item::(item: Item.t)
     ::contentOpacity
     ::backgroundOpacity
     ::expanded
