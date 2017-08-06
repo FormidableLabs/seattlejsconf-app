@@ -17,19 +17,19 @@ let styles =
       }
     );
 
-let make ::talk _children => {
+let make talk::(talk: Item.talk) _children => {
   ...component,
   render: fun _self =>
     <Text style=styles##speaker>
       (
         Array.mapi
           (
-            fun i s =>
+            fun i {Item.name: name} =>
               i > 0 ?
-                ReasonReact.stringToElement (String.uppercase (" & " ^ s##name)) :
-                ReasonReact.stringToElement (String.uppercase s##name)
+                ReasonReact.stringToElement (String.uppercase (" & " ^ name)) :
+                ReasonReact.stringToElement (String.uppercase name)
           )
-          talk##speakers |> ReasonReact.arrayToElement
+          talk.speakers |> ReasonReact.arrayToElement
       )
     </Text>
 };

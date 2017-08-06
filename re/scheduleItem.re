@@ -19,13 +19,13 @@ let styles =
 
 let component = ReasonReact.statelessComponent "ScheduleItem";
 
-let make item::(item: Item.t) _children => {
+let make item::{Item.title: title, start} _children => {
   ...component,
   render: fun _self =>
     <View style=styles##item>
       <View style=styles##row>
-        <View style=styles##titleWrap> <ScheduleTitle title=item##title /> </View>
+        <View style=styles##titleWrap> <ScheduleTitle talkTitle=title /> </View>
       </View>
-      <ScheduleTime start=item##start />
+      <ScheduleTime start />
     </View>
 };

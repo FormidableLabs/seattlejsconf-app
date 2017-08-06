@@ -8,7 +8,7 @@ let styles =
       {"title": style [fontFamily "open-sans-bold", fontSize 16., color "white", marginBottom 4.]}
     );
 
-let make ::title _children => {
+let make ::talkTitle _children => {
   ...component,
-  render: fun _self => <Text style=styles##title value=title />
+  render: fun _self => <Text style=styles##title value=talkTitle />
 };

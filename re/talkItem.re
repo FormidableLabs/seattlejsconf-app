@@ -25,8 +25,8 @@ let styles =
 let component = ReasonReact.statefulComponent "TalkItem";
 
 let make
-    item::(item: Item.t)
-    talk::(talk: Item.talk)
+    item::({Item.start: start} as item)
+    talk::({Item.talkTitle: talkTitle} as talk)
     index::(index: int)
     modalOpen::(modalOpen: bool)
     selectedIndex::(selectedIndex: int)
@@ -55,13 +55,10 @@ let make
               )
         ref=(self.handle setRef)>
         <View style=styles##row>
-          <View style=styles##titleWrap>
-            <ScheduleTitle title=talk##title />
-            <SpeakerNames talk />
-          </View>
+          <View style=styles##titleWrap> <ScheduleTitle talkTitle /> <SpeakerNames talk /> </View>
           <SpeakerImages talk />
         </View>
-        <ScheduleTime start=item##start />
+        <ScheduleTime start />
       </View>
     </TouchableOpacity>
 };
