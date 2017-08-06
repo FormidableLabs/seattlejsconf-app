@@ -25,7 +25,7 @@ let styles =
 let component = ReasonReact.statefulComponent "ItemModal";
 
 let make
-    item::(item: Item.t)
+    item::{Item.start: start, talk, title}
     ::contentOpacity
     ::backgroundOpacity
     ::expanded
@@ -41,36 +41,36 @@ let make
         <View style=styles##row>
           <View style=styles##titleWrap>
             (
-              switch (Js.Null_undefined.to_opt item##talk) {
-              | None => <ScheduleTitle title=item##title />
-              | Some talk => <ScheduleTitle title=talk##title />
+              switch talk {
+              | None => <ScheduleTitle talkTitle=title />
+              | Some {Item.talkTitle: talkTitle} => <ScheduleTitle talkTitle />
               }
             )
             (
-              switch (Js.Null_undefined.to_opt item##talk) {
+              switch talk {
               | None => ReasonReact.nullElement
-              | Some t => <SpeakerNames talk=t />
+              | Some talk => <SpeakerNames talk />
               }
             )
           </View>
           (
-            switch (Js.Null_undefined.to_opt item##talk) {
+            switch talk {
             | None => ReasonReact.nullElement
-            | Some t => <SpeakerImages talk=t />
+            | Some talk => <SpeakerImages talk />
             }
           )
         </View>
-        <ScheduleTime start=item##start />
+        <ScheduleTime start />
         (
           switch expanded {
           | false => ReasonReact.nullElement
           | true =>
-            switch (Js.Null_undefined.to_opt item##talk) {
+            switch talk {
             | None => ReasonReact.nullElement
-            | Some t =>
+            | Some {Item.description: description, speakers} =>
               <Animated.View style=contentContainerOpacity>
-                <TalkDescription value=t##description />
-                <SpeakerBio speakers=t##speakers />
+                <TalkDescription value=description />
+                <SpeakerBio speakers />
               </Animated.View>
             }
           }

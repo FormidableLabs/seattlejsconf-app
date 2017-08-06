@@ -25,23 +25,23 @@ let styles =
       }
     );
 
-let make ::talk _children => {
+let make talk::{Item.speakers: speakers} _children => {
   ...component,
   render: fun _self =>
     <View style=styles##speakerWrapper>
       {
-        let speakerLength = Array.length talk##speakers;
+        let speakerLength = Array.length speakers;
         Array.mapi
           (
-            fun i s =>
+            fun i {Item.name: name, photo} =>
               <Image
-                key=s##name
+                key=name
                 source=(
                   URI Image.(
                         imageURISource
                           uri::(
                             "https://images.graph.cool/v1/cj5cm0t4pnljk01087tv4g61a/" ^
-                            s##photo##secret ^ "/150x150"
+                            photo ^ "/150x150"
                           )
                           ()
                       )
@@ -54,7 +54,7 @@ let make ::talk _children => {
                       )
               />
           )
-          talk##speakers |> ReasonReact.arrayToElement
+          speakers |> ReasonReact.arrayToElement
       }
     </View>
 };

@@ -340,8 +340,8 @@ let make ::loading ::error ::data=? _children => {
             {
               let schedule =
                 switch data {
-                | None => [||]
-                | Some d => d
+                | None => []
+                | Some l => l
                 };
               loading == true ?
                 <View style=Style.(style [flex 1., alignItems `center, justifyContent `center])>
@@ -351,10 +351,10 @@ let make ::loading ::error ::data=? _children => {
                   switch (Js.Null_undefined.to_opt error) {
                   | None =>
                     Utils.getUniqueDates schedule |>
-                    Array.map (
+                    List.map (
                       fun date =>
-                        Array.concat [
-                          [|
+                        List.concat [
+                          [
                             <View key=date style=styles##dateWrap>
                               <Text
                                 style=styles##date
@@ -364,12 +364,12 @@ let make ::loading ::error ::data=? _children => {
                                 )
                               />
                             </View>
-                          |],
-                          Array.mapi
+                          ],
+                          List.mapi
                             (
-                              fun index item =>
-                                switch (Js.Null_undefined.to_opt item##talk) {
-                                | None => <ScheduleItem item key=item##id />
+                              fun index (item: Item.t) =>
+                                switch item.talk {
+                                | None => <ScheduleItem item key=item.id />
                                 | Some talk =>
                                   <TalkItem
                                     item
@@ -382,14 +382,14 @@ let make ::loading ::error ::data=? _children => {
                                       | _ => false
                                       }
                                     )
-                                    key=item##id
+                                    key=item.id
                                     onPress=(self.update startExpandingModal)
                                   />
                                 }
                             )
                             (Utils.getScheduleForDate schedule date)
                         ]
-                    ) |> Array.to_list |> Array.concat |> ReasonReact.arrayToElement
+                    ) |> List.concat |> Array.of_list |> ReasonReact.arrayToElement
                   | Some e =>
                     <View
                       style=Style.(style [flex 1., alignItems `center, justifyContent `center])>
@@ -453,17 +453,24 @@ let make ::loading ::error ::data=? _children => {
     </View>
 };
 
+type data =
+  Js.t {
+    .
+    loading : Js.boolean,
+    error : Js.null_undefined (Js.t {. message : string}),
+    allSchedules : array Item.t_js
+  };
+
 /* JS Export */
 let jsComponent =
   ReasonReact.wrapReasonForJs
     ::component
     (
-      fun props =>
-        make
-          loading::(Js.to_bool props##data##loading)
-          error::props##data##error
-          data::props##data##allSchedules
-          [||]
+      fun props => {
+        let rawData: data = props##data;
+        let data = List.map Item.convert_from_js (Array.to_list rawData##allSchedules);
+        make loading::(Js.to_bool rawData##loading) error::rawData##error ::data [||]
+      }
     );
 
 /* GraphQL */

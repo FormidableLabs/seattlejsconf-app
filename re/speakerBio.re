@@ -12,7 +12,7 @@ let styles =
       }
     );
 
-let make ::speakers _children => {
+let make speakers::(speakers: array Item.speaker) _children => {
   ...component,
   render: fun _self => {
     let speakerCount = Array.length speakers;
@@ -21,10 +21,10 @@ let make ::speakers _children => {
         (
           Array.map
             (
-              fun speaker =>
-                <View style=styles##wrapper key=speaker##name>
-                  <Text value=speaker##name style=styles##heading />
-                  <Text style=styles##text value=speaker##bio />
+              fun {Item.bio: bio, name} =>
+                <View style=styles##wrapper key=name>
+                  <Text value=name style=styles##heading />
+                  <Text style=styles##text value=bio />
                 </View>
             )
             speakers |> ReasonReact.arrayToElement
@@ -32,7 +32,7 @@ let make ::speakers _children => {
       </View> :
       <View style=styles##wrapper>
         <Text value="Speaker Bio" style=styles##heading />
-        <Text style=styles##text value=speakers.(0)##bio />
+        <Text style=styles##text value=speakers.(0).bio />
       </View>
   }
 };
