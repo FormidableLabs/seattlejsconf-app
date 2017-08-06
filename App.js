@@ -1,4 +1,5 @@
 import React from "react";
+import { View, Text } from "react-native";
 import ApolloClient, { createNetworkInterface } from "apollo-client";
 import { ApolloProvider } from "react-apollo";
 import { Font } from "expo";
@@ -6,6 +7,7 @@ import { compose, createStore, combineReducers, applyMiddleware } from "redux";
 import { offline } from "redux-offline";
 import config from "redux-offline/lib/defaults";
 
+import Rehydrate from "./Rehydrate";
 import { component as Root } from "./lib/js/re/root";
 
 console.ignoredYellowBox = [
@@ -21,9 +23,30 @@ const client = new ApolloClient({
 });
 
 const store = createStore(
-  combineReducers({ apollo: client.reducer() }),
+  combineReducers({
+    apollo: client.reducer(),
+    rehydrate: (state = false, action) => {
+      switch (action.type) {
+        case "REHYDRATE_STORE":
+          return true;
+        default:
+          return state;
+      }
+    }
+  }),
   undefined,
-  compose(applyMiddleware(client.middleware()), offline(config))
+  compose(
+    applyMiddleware(client.middleware()),
+    offline({
+      ...config,
+      persistCallback: () => {
+        store.dispatch({ type: "REHYDRATE_STORE" });
+      },
+      persistOptions: {
+        blacklist: ["rehydrate"]
+      }
+    })
+  )
 );
 
 export default class App extends React.Component {
@@ -45,10 +68,15 @@ export default class App extends React.Component {
   }
 
   render() {
-    return this.state.fontLoaded
-      ? <ApolloProvider client={client} store={store}>
-          <Root />
+    return (
+      <View style={{ flex: 1, backgroundColor: "rgb(54, 97, 115)" }}>
+        <ApolloProvider client={client} store={store}>
+          <Rehydrate>
+            {this.state.fontLoaded ? <Root /> : null}
+          </Rehydrate>
         </ApolloProvider>
-      : null;
+      </View>
+    );
+    return;
   }
 }
