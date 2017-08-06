@@ -18,9 +18,9 @@ type modalAnimationState = {
 };
 
 type modalState =
-  | Collapsing ScheduleItem.item sourceItemDimensions modalAnimationState
-  | Expanding ScheduleItem.item sourceItemDimensions modalAnimationState
-  | Expanded ScheduleItem.item sourceItemDimensions modalAnimationState
+  | Collapsing Item.t sourceItemDimensions modalAnimationState
+  | Expanding Item.t sourceItemDimensions modalAnimationState
+  | Expanded Item.t sourceItemDimensions modalAnimationState
   | Closed;
 
 type _state = {
@@ -467,27 +467,6 @@ let jsComponent =
     );
 
 /* GraphQL */
-let query =
-  GraphQLTag.gql {|
-  query allSchedules {
-    allSchedules {
-      id
-      start
-      talk {
-        title
-        description
-        speakers {
-          id
-          name
-          bio
-          photo {
-            secret
-          }
-        }
-      }
-      title
-    }
-  }
-|};
+let query = Item.query;
 
 let wrappedComponent = (ReactApollo.graphql ::query) jsComponent;
