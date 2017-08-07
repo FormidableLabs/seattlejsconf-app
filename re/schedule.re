@@ -287,7 +287,7 @@ let animateCollapseModal
 };
 
 /* Make */
-let make ::loading ::error ::data=? _children => {
+let make ::loading ::error ::schedule _children => {
   ...component,
   initialState: fun () => {
     listOpacity: Animated.Value.create 1.,
@@ -330,19 +330,14 @@ let make ::loading ::error ::data=? _children => {
               }
             )
             style=styles##scrollView
-            stickyHeaderIndices=(loading == false ? [1, Utils.getIndexFromData data] : [])
+            stickyHeaderIndices=(loading == false ? [1, Utils.getIndexFromSchedule schedule] : [])
             contentContainerStyle=styles##contentContainer>
             <Image
               source=Image.(Required (Packager.require "../../../static/banner.png"))
               style=styles##banner
               resizeMode=`cover
             />
-            {
-              let schedule =
-                switch data {
-                | None => []
-                | Some l => l
-                };
+            (
               loading == true ?
                 <View style=Style.(style [flex 1., alignItems `center, justifyContent `center])>
                   <ActivityIndicator />
@@ -397,7 +392,7 @@ let make ::loading ::error ::data=? _children => {
                     </View>
                   }
                 )
-            }
+            )
           </ScrollView>
         </View>
       </Animated.View>
@@ -461,20 +456,26 @@ type data =
     allSchedules : Js.null_undefined (array Item.t_js)
   };
 
+type props = Js.t {. data : data};
+
 /* JS Export */
 let jsComponent =
   ReasonReact.wrapReasonForJs
     ::component
     (
-      fun props => {
-        let rawData: data = props##data;
-        let list =
-          switch (Js.Null_undefined.to_opt rawData##allSchedules) {
-          | None => []
-          | Some arr => Array.to_list arr
-          };
-        let data = List.map Item.convert_from_js list;
-        make loading::(Js.to_bool rawData##loading) error::rawData##error ::data [||]
+      fun (props: props) => {
+        let data = props##data;
+        let loading = Js.to_bool data##loading;
+        let error = data##error;
+        let schedule =
+          (
+            switch (Js.Null_undefined.to_opt data##allSchedules) {
+            | None => []
+            | Some arr => Array.to_list arr
+            }
+          ) |>
+          List.map Item.convert_from_js;
+        make ::loading ::error ::schedule [||]
       }
     );
 
