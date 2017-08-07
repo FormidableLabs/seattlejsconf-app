@@ -458,7 +458,7 @@ type data =
     .
     loading : Js.boolean,
     error : Js.null_undefined (Js.t {. message : string}),
-    allSchedules : array Item.t_js
+    allSchedules : Js.null_undefined (array Item.t_js)
   };
 
 /* JS Export */
@@ -468,7 +468,12 @@ let jsComponent =
     (
       fun props => {
         let rawData: data = props##data;
-        let data = List.map Item.convert_from_js (Array.to_list rawData##allSchedules);
+        let list =
+          switch (Js.Null_undefined.to_opt rawData##allSchedules) {
+          | None => []
+          | Some arr => Array.to_list arr
+          };
+        let data = List.map Item.convert_from_js list;
         make loading::(Js.to_bool rawData##loading) error::rawData##error ::data [||]
       }
     );
