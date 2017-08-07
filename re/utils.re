@@ -1,11 +1,12 @@
-let getUniqueDates data =>
-  List.map (fun a => String.sub a.Item.start 0 10) data |> List.sort_uniq compare;
+let getItemDate (item: Item.t) => String.sub item.start 0 10;
 
-let getScheduleForDate data date =>
-  List.filter (fun a => String.sub a.Item.start 0 10 === date) data;
+let getUniqueDates schedule => List.map getItemDate schedule |> List.sort_uniq compare;
 
-let getIndexFromData data =>
-  switch data {
-  | None => 0
-  | Some d => List.length (getScheduleForDate d (List.hd (getUniqueDates d))) + 2
+let getScheduleForDate schedule date =>
+  List.filter (fun item => getItemDate item === date) schedule;
+
+let getIndexFromSchedule schedule =>
+  switch (getUniqueDates schedule) {
+  | [firstDate, ..._] => List.length (getScheduleForDate schedule firstDate) + 2
+  | [] => 2
   };
