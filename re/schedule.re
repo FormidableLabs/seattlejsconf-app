@@ -287,199 +287,182 @@ let animateCollapseModal
 };
 
 /* Make */
-let make ::loading ::error ::schedule _children => {
-  ...component,
-  initialState: fun () => {
-    listOpacity: Animated.Value.create 1.,
-    modalState: Closed,
-    selectedIndex: 0,
-    listRef: None
-  },
-  didUpdate:
-    fun {
-          oldSelf: {state: {modalState: oldModalState}},
-          newSelf: {state: {modalState: newModalState, listRef, listOpacity}, update}
-        } =>
-    switch (oldModalState, newModalState) {
-    | (Closed, Expanding item sourceItemDimensions modalAnimationState) =>
-      animateExpandModal
-        ::listRef
-        ::listOpacity
-        ::modalAnimationState
-        ::item
-        ::sourceItemDimensions
-        onFinish::(update onExpandAnimationFinish)
-    | (Expanded _ _ _, Collapsing _ sourceItemDimensions modalAnimationState) =>
-      animateCollapseModal
-        ::listOpacity
-        ::sourceItemDimensions
-        ::modalAnimationState
-        onFinish::(update onCollapseAnimationFinish)
-    | (_, _) => ()
+let make data::(data: Item.data) _children => {
+  let loading = Js.to_bool data##loading;
+  let error = data##error;
+  let schedule =
+    (
+      switch (Js.Null_undefined.to_opt data##allSchedules) {
+      | None => []
+      | Some arr => Array.to_list arr
+      }
+    ) |>
+    List.map Item.convert_from_js;
+  {
+    ...component,
+    initialState: fun () => {
+      listOpacity: Animated.Value.create 1.,
+      modalState: Closed,
+      selectedIndex: 0,
+      listRef: None
     },
-  render: fun self =>
-    <View style=styles##container>
-      <StatusBar backgroundColor="#ffffff" barStyle=`lightContent />
-      <Animated.View style=Style.(style [opacityAnimated self.state.listOpacity, flex 1.])>
-        <View ref=(self.handle setRef) style=styles##scrollView collapsable=false>
-          <ScrollView
-            scrollEnabled=(
-              switch self.state.modalState {
-              | Closed => true
-              | _ => false
-              }
-            )
-            style=styles##scrollView
-            stickyHeaderIndices=(loading == false ? [1, Utils.getIndexFromSchedule schedule] : [])
-            contentContainerStyle=styles##contentContainer>
-            <Image
-              source=Image.(Required (Packager.require "../../../static/banner.png"))
-              style=styles##banner
-              resizeMode=`cover
-            />
-            (
-              loading == true ?
-                <View style=Style.(style [flex 1., alignItems `center, justifyContent `center])>
-                  <ActivityIndicator />
-                </View> :
-                (
-                  switch (Js.Null_undefined.to_opt error) {
-                  | None =>
-                    Utils.getUniqueDates schedule |>
-                    List.map (
-                      fun date =>
-                        List.concat [
-                          [
-                            <View key=date style=styles##dateWrap>
-                              <Text
-                                style=styles##date
-                                value=(
-                                  String.uppercase
-                                    Moment.(moment date |> Moment.format "dddd, MMMM Do")
-                                )
-                              />
-                            </View>
-                          ],
-                          List.mapi
-                            (
-                              fun index (item: Item.t) =>
-                                switch item.talk {
-                                | None => <ScheduleItem item key=item.id />
-                                | Some talk =>
-                                  <TalkItem
-                                    item
-                                    talk
-                                    index
-                                    selectedIndex=self.state.selectedIndex
-                                    modalOpen=(
-                                      switch self.state.modalState {
-                                      | Expanded _ _ _ => true
-                                      | _ => false
-                                      }
-                                    )
-                                    key=item.id
-                                    onPress=(self.update startExpandingModal)
-                                  />
-                                }
-                            )
-                            (Utils.getScheduleForDate schedule date)
-                        ]
-                    ) |> List.concat |> Array.of_list |> ReasonReact.arrayToElement
-                  | Some e =>
-                    <View
-                      style=Style.(style [flex 1., alignItems `center, justifyContent `center])>
-                      <Text value=e##message />
-                    </View>
-                  }
-                )
-            )
-          </ScrollView>
-        </View>
-      </Animated.View>
-      /* </LinearGradient> */
-      (
-        switch self.state.modalState {
-        | Closed => ReasonReact.nullElement
-        /* The fields from the modalAnimationState record
-              are bound to names with trailing apostrophes
-              because top, left, height, and width were
-              shadowed by values from Style module
-           */
-        | Collapsing item _ modalAnimationState
-        | Expanding item _ modalAnimationState
-        | Expanded item _ modalAnimationState =>
-          let {
-            top: top',
-            left: left',
-            height: height',
-            width: width',
-            contentOpacity,
-            backgroundOpacity
-          } = modalAnimationState;
-          <Animated.View
-            style=Style.(
-                    concat [
-                      styles##modal,
-                      style [
-                        position `absolute,
-                        topAnimated top',
-                        leftAnimated left',
-                        widthAnimated width',
-                        heightAnimated height',
-                        overflow `hidden
-                      ]
-                    ]
-                  )>
-            <ItemModal
-              contentOpacity
-              backgroundOpacity
-              item
-              expanded=(
+    didUpdate:
+      fun {
+            oldSelf: {state: {modalState: oldModalState}},
+            newSelf: {state: {modalState: newModalState, listRef, listOpacity}, update}
+          } =>
+      switch (oldModalState, newModalState) {
+      | (Closed, Expanding item sourceItemDimensions modalAnimationState) =>
+        animateExpandModal
+          ::listRef
+          ::listOpacity
+          ::modalAnimationState
+          ::item
+          ::sourceItemDimensions
+          onFinish::(update onExpandAnimationFinish)
+      | (Expanded _ _ _, Collapsing _ sourceItemDimensions modalAnimationState) =>
+        animateCollapseModal
+          ::listOpacity
+          ::sourceItemDimensions
+          ::modalAnimationState
+          onFinish::(update onCollapseAnimationFinish)
+      | (_, _) => ()
+      },
+    render: fun self =>
+      <View style=styles##container>
+        <StatusBar backgroundColor="#ffffff" barStyle=`lightContent />
+        <Animated.View style=Style.(style [opacityAnimated self.state.listOpacity, flex 1.])>
+          <View ref=(self.handle setRef) style=styles##scrollView collapsable=false>
+            <ScrollView
+              scrollEnabled=(
                 switch self.state.modalState {
-                | Expanded _ _ _ => true
+                | Closed => true
                 | _ => false
                 }
               )
-              onClose=(self.update startCollapsingModal)
-            />
-          </Animated.View>
-        }
-      )
-    </View>
+              style=styles##scrollView
+              stickyHeaderIndices=(
+                loading == false ? [1, Utils.getIndexFromSchedule schedule] : []
+              )
+              contentContainerStyle=styles##contentContainer>
+              <Image
+                source=Image.(Required (Packager.require "../../../static/banner.png"))
+                style=styles##banner
+                resizeMode=`cover
+              />
+              (
+                loading == true ?
+                  <View style=Style.(style [flex 1., alignItems `center, justifyContent `center])>
+                    <ActivityIndicator />
+                  </View> :
+                  (
+                    switch (Js.Null_undefined.to_opt error) {
+                    | None =>
+                      Utils.getUniqueDates schedule |>
+                      List.map (
+                        fun date =>
+                          List.concat [
+                            [
+                              <View key=date style=styles##dateWrap>
+                                <Text
+                                  style=styles##date
+                                  value=(
+                                    String.uppercase
+                                      Moment.(moment date |> Moment.format "dddd, MMMM Do")
+                                  )
+                                />
+                              </View>
+                            ],
+                            List.mapi
+                              (
+                                fun index (item: Item.t) =>
+                                  switch item.talk {
+                                  | None => <ScheduleItem item key=item.id />
+                                  | Some talk =>
+                                    <TalkItem
+                                      item
+                                      talk
+                                      index
+                                      selectedIndex=self.state.selectedIndex
+                                      modalOpen=(
+                                        switch self.state.modalState {
+                                        | Expanded _ _ _ => true
+                                        | _ => false
+                                        }
+                                      )
+                                      key=item.id
+                                      onPress=(self.update startExpandingModal)
+                                    />
+                                  }
+                              )
+                              (Utils.getScheduleForDate schedule date)
+                          ]
+                      ) |> List.concat |> Array.of_list |> ReasonReact.arrayToElement
+                    | Some e =>
+                      <View
+                        style=Style.(style [flex 1., alignItems `center, justifyContent `center])>
+                        <Text value=e##message />
+                      </View>
+                    }
+                  )
+              )
+            </ScrollView>
+          </View>
+        </Animated.View>
+        /* </LinearGradient> */
+        (
+          switch self.state.modalState {
+          | Closed => ReasonReact.nullElement
+          /* The fields from the modalAnimationState record
+                are bound to names with trailing apostrophes
+                because top, left, height, and width were
+                shadowed by values from Style module
+             */
+          | Collapsing item _ modalAnimationState
+          | Expanding item _ modalAnimationState
+          | Expanded item _ modalAnimationState =>
+            let {
+              top: top',
+              left: left',
+              height: height',
+              width: width',
+              contentOpacity,
+              backgroundOpacity
+            } = modalAnimationState;
+            <Animated.View
+              style=Style.(
+                      concat [
+                        styles##modal,
+                        style [
+                          position `absolute,
+                          topAnimated top',
+                          leftAnimated left',
+                          widthAnimated width',
+                          heightAnimated height',
+                          overflow `hidden
+                        ]
+                      ]
+                    )>
+              <ItemModal
+                contentOpacity
+                backgroundOpacity
+                item
+                expanded=(
+                  switch self.state.modalState {
+                  | Expanded _ _ _ => true
+                  | _ => false
+                  }
+                )
+                onClose=(self.update startCollapsingModal)
+              />
+            </Animated.View>
+          }
+        )
+      </View>
+  }
 };
 
-type data =
-  Js.t {
-    .
-    loading : Js.boolean,
-    error : Js.null_undefined (Js.t {. message : string}),
-    allSchedules : Js.null_undefined (array Item.t_js)
-  };
-
-type props = Js.t {. data : data};
-
-/* JS Export */
-let jsComponent =
-  ReasonReact.wrapReasonForJs
-    ::component
-    (
-      fun (props: props) => {
-        let data = props##data;
-        let loading = Js.to_bool data##loading;
-        let error = data##error;
-        let schedule =
-          (
-            switch (Js.Null_undefined.to_opt data##allSchedules) {
-            | None => []
-            | Some arr => Array.to_list arr
-            }
-          ) |>
-          List.map Item.convert_from_js;
-        make ::loading ::error ::schedule [||]
-      }
-    );
-
-/* GraphQL */
-let query = Item.query;
-
-let wrappedComponent = (ReactApollo.graphql ::query) jsComponent;
+let wrappedComponent = {
+  module M = ReactApollo.CreateWrapper Item;
+  M.wrapComponent ::component ::make
+};
