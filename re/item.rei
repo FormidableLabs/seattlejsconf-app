@@ -21,4 +21,12 @@ type t = {
 
 type t_js;
 
+type data =
+  Js.t {
+    .
+    loading : Js.boolean,
+    error : Js.null_undefined (Js.t {. message : string}),
+    allSchedules : Js.null_undefined (array t_js)
+  };
+
 let convert_from_js: t_js => t;

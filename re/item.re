@@ -25,6 +25,13 @@ module ItemJS = {
   type speaker = Js.t {. name : string, bio : string, photo : photo};
   type talk = Js.t {. title : string, description : string, speakers : Js.Array.t speaker};
   type t = Js.t {. id : string, start : string, talk : Js.null_undefined talk, title : string};
+  type data =
+    Js.t {
+      .
+      loading : Js.boolean,
+      error : Js.null_undefined (Js.t {. message : string}),
+      allSchedules : Js.null_undefined (array t)
+    };
 };
 
 type speaker = {
@@ -66,3 +73,4 @@ let convert_from_js (t: ItemJS.t) => {
 };
 
 type t_js = ItemJS.t;
+type data = ItemJS.data;
