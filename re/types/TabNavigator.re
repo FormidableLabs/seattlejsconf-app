@@ -1,36 +1,41 @@
-type config = Js.t {. tintColor : string};
+type config = {. "tintColor": string};
 
-type routeConfig =
-  Js.t {
+type routeConfig = {
+  .
+  "screen": ReasonReact.reactClass,
+  "navigationOptions": {
     .
-    screen : ReasonReact.reactClass,
-    navigationOptions :
-      Js.t {. tabBarLabel : string, tabBarIcon : config => ReasonReact.reactElement}
-  };
+    "tabBarLabel": string,
+    "tabBarIcon": config => ReasonReact.reactElement
+  }
+};
 
-type routesConfig = Js.t {. schedule : routeConfig, location : routeConfig, info : routeConfig};
+type routesConfig = {
+  .
+  "schedule": routeConfig,
+  "location": routeConfig,
+  "info": routeConfig
+};
 
-type tabBarOptions =
-  Js.t {
-    .
-    activeTintColor : string,
-    inactiveTintColor : string,
-    activeBackgroundColor : string,
-    inactiveBackgroundColor : string
-  };
+type tabBarOptions = {
+  .
+  "activeTintColor": string,
+  "inactiveTintColor": string,
+  "activeBackgroundColor": string,
+  "inactiveBackgroundColor": string
+};
 
-type navConfig =
-  Js.t {
-    .
-    animationEnabled : Js.boolean,
-    tabBarOptions : tabBarOptions,
-    tabBarPosition : string,
-    tabBarComponent : ReasonReact.reactClass
-  };
+type navConfig = {
+  .
+  "animationEnabled": Js.boolean,
+  "tabBarOptions": tabBarOptions,
+  "tabBarPosition": string,
+  "tabBarComponent": ReasonReact.reactClass
+};
 
-external _tabNavigator : routesConfig => navConfig => ReasonReact.reactClass =
-  "TabNavigator" [@@bs.module "react-navigation"];
+[@bs.module "react-navigation"]
+external _tabNavigator : (routesConfig, navConfig) => ReasonReact.reactClass = "TabNavigator";
 
-external tabBarBottom : ReasonReact.reactClass = "TabBarBottom" [@@bs.module "react-navigation"];
+[@bs.module "react-navigation"] external tabBarBottom : ReasonReact.reactClass = "TabBarBottom";
 
-let create ::routeConfig ::navConfig => _tabNavigator routeConfig navConfig;
+let create = (~routeConfig, ~navConfig) => _tabNavigator(routeConfig, navConfig);

@@ -18,23 +18,23 @@ type modalAnimationState = {
 };
 
 type modalState =
-  | Collapsing Item.t sourceItemDimensions modalAnimationState
-  | Expanding Item.t sourceItemDimensions modalAnimationState
-  | Expanded Item.t sourceItemDimensions modalAnimationState
+  | Collapsing(Item.t, sourceItemDimensions, modalAnimationState)
+  | Expanding(Item.t, sourceItemDimensions, modalAnimationState)
+  | Expanded(Item.t, sourceItemDimensions, modalAnimationState)
   | Closed;
 
-type _state = {
+type state = {
   modalState,
   selectedIndex: int,
   listOpacity: Animated.Value.t,
-  mutable listRef: option ReasonReact.reactRef
+  mutable listRef: option(ReasonReact.reactRef)
 };
 
 /* Variables */
 let animationDuration = 300.;
 
 let statusOffset =
-  PlatformRe.os === PlatformRe.IOS ? 0. : float_of_int StatBar.constants##currentHeight;
+  Platform.os === Platform.IOS ? 0. : float_of_int(StatBar.constants##currentHeight);
 
 let listPadding = 10;
 
@@ -42,297 +42,336 @@ let iosBarHeight = 20.;
 
 let deferDuration = 0;
 
-let windowWidth = (Dimensions.get `window)##width;
+let windowWidth = Dimensions.get(`window)##width;
 
-let easeIn x => x *. x *. x;
+let easeIn = (x) => x *. x *. x;
 
 /* Methods */
-let closeModal _ {ReasonReact.state: state} => ReasonReact.Update {...state, modalState: Closed};
+let closeModal = (_, {ReasonReact.state}) => ReasonReact.Update({...state, modalState: Closed});
 
-let setRef theRef {ReasonReact.state: state} => state.listRef = Js.Null.to_opt theRef;
-
-let startExpandingModal (x, y, width, height, item, selectedIndex) {ReasonReact.state: state} =>
-  switch state.modalState {
-  | Closed =>
-    /* Handle target dimensions */
-    let fx = float_of_int x;
-    let fy = float_of_int y;
-    let fw = float_of_int width;
-    let fh = float_of_int height;
-    let targetDimensions = {x: fx, y: fy +. statusOffset, width: fw, height: fh};
-    let newAnimatedValue x => Animated.Value.create x;
-    ReasonReact.Update {
-      ...state,
-      modalState:
-        Expanding
-          item
-          targetDimensions
-          {
-            top: newAnimatedValue (fy +. statusOffset),
-            left: newAnimatedValue fx,
-            width: newAnimatedValue fw,
-            height: newAnimatedValue fh,
-            contentOpacity: newAnimatedValue 0.,
-            backgroundOpacity: newAnimatedValue 1.
-          },
-      selectedIndex
-    }
-  | _ => ReasonReact.NoUpdate
-  };
-
-let startCollapsingModal _ {ReasonReact.state: state} =>
-  switch state.modalState {
-  | Expanded item sourceItemDimensions modalState =>
-    ReasonReact.Update {...state, modalState: Collapsing item sourceItemDimensions modalState}
-  | _ => failwith "TODO: this is impossible state"
-  };
+let setRef = (theRef, {ReasonReact.state}) => state.listRef = Js.Null.to_opt(theRef);
 
 /* Component */
-let component = ReasonReact.statefulComponent "Schedule";
+type action =
+  | Close
+  | Expand(int, int, int, int, Item.t, int)
+  | CollapseFinish
+  | ExpandFinish(Item.t, sourceItemDimensions, modalAnimationState);
+
+let startExpand = (x, y, width, height, item, index) => Expand(x, y, width, height, item, index);
+
+let startClose = (_event) => Close;
+
+let component = ReasonReact.reducerComponent("Schedule");
 
 /* Styles */
 let styles =
-  StyleSheet.create
+  StyleSheet.create(
     Style.(
       {
         "container":
-          style [
-            flex 1.,
-            alignItems `stretch,
-            justifyContent `center,
-            backgroundColor "rgb(54, 97, 115)",
-            paddingTop (
-              PlatformRe.os === PlatformRe.IOS ?
-                20. : float_of_int StatBar.constants##currentHeight
+          style([
+            flex(1.),
+            alignItems(`stretch),
+            justifyContent(`center),
+            backgroundColor("rgb(54, 97, 115)"),
+            paddingTop(
+              Platform.os === Platform.IOS ? 20. : float_of_int(StatBar.constants##currentHeight)
             )
-          ],
-        "scrollView": style [flex 1.],
+          ]),
+        "scrollView": style([flex(1.)]),
         "contentContainer":
-          style [paddingBottom 10., flexGrow 1., width (float_of_int windowWidth)],
-        "modal": style [position `absolute, bottom 5., right 5., width 25., height 25.],
+          style([paddingBottom(10.), flexGrow(1.), width(float_of_int(windowWidth))]),
+        "modal": style([position(`absolute), bottom(5.), right(5.), width(25.), height(25.)]),
         "date":
-          style [
-            fontFamily "open-sans-bold",
-            letterSpacing 1.,
-            color "rgb(185,219,111)",
-            backgroundColor "rgb(54, 97, 115)",
-            textAlign `center,
-            fontSize 18.,
-            padding 10.
-          ],
-        "dateWrap": style [borderBottomWidth 1., borderBottomColor "rgba(255,255,255,0.75)"],
+          style([
+            fontFamily("open-sans-bold"),
+            letterSpacing(1.),
+            color("rgb(185,219,111)"),
+            backgroundColor("rgb(54, 97, 115)"),
+            textAlign(`center),
+            fontSize(18.),
+            padding(10.)
+          ]),
+        "dateWrap": style([borderBottomWidth(1.), borderBottomColor("rgba(255,255,255,0.75)")]),
         "banner":
-          style [
-            width (float_of_int windowWidth),
-            height (float_of_int windowWidth *. 0.656),
-            marginBottom 0.
-          ]
+          style([
+            width(float_of_int(windowWidth)),
+            height(float_of_int(windowWidth) *. 0.656),
+            marginBottom(0.)
+          ])
       }
-    );
+    )
+  );
 
-let onExpandAnimationFinish
-    (item, sourceItemDimensions, modalAnimationState)
-    {ReasonReact.state: state} =>
-  ReasonReact.Update {
-    ...state,
-    modalState: Expanded item sourceItemDimensions modalAnimationState
-  };
+let onExpandAnimationFinish = ((item, sourceItemDimensions, modalAnimationState)) =>
+  ExpandFinish(item, sourceItemDimensions, modalAnimationState);
 
-let onCollapseAnimationFinish _ {ReasonReact.state: state} =>
-  ReasonReact.Update {...state, modalState: Closed};
+let onCollapseAnimationFinish = (_) => CollapseFinish;
 
-let animateExpandModal
-    ::listRef
-    ::listOpacity
-    ::modalAnimationState
-    ::item
-    ::sourceItemDimensions
-    ::onFinish => {
+let animateExpandModal =
+    (~listRef, ~listOpacity, ~modalAnimationState, ~item, ~sourceItemDimensions, ~onFinish) => {
   let {top, width, height, contentOpacity} = modalAnimationState;
-  let windowWidth = (DimensionsRe.get `window)##width - listPadding * 2;
+  let windowWidth = Dimensions.get(`window)##width - listPadding * 2;
   switch listRef {
   | None => ()
-  | Some r =>
-    (ReasonReact.refToJsObj r)##measure (
-      fun _x _y _width _height => {
+  | Some(r) =>
+    ReasonReact.refToJsObj(r)##measure(
+      (_x, _y, _width, _height) => {
         let wh = _height - listPadding * 2;
         /* Define animations */
         let animationBatch =
-          Animated.parallel
+          Animated.parallel(
             [|
-              Animated.Timing.animate
-                value::listOpacity
-                toValue::(`raw 0.)
-                easing::easeIn
-                duration::animationDuration
-                (),
-              Animated.Timing.animate
-                value::top
-                toValue::(
-                  `raw (
-                    PlatformRe.os === PlatformRe.IOS ?
-                      iosBarHeight +. float_of_int listPadding :
-                      statusOffset +. float_of_int listPadding
-                  )
-                )
-                easing::easeIn
-                duration::animationDuration
-                (),
-              Animated.Timing.animate
-                value::width
-                toValue::(`raw (float_of_int windowWidth))
-                easing::easeIn
-                duration::animationDuration
-                (),
-              Animated.Timing.animate
-                value::height
-                toValue::(`raw (float_of_int wh))
-                easing::easeIn
-                duration::animationDuration
+              Animated.Timing.animate(
+                ~value=listOpacity,
+                ~toValue=`raw(0.),
+                ~easing=easeIn,
+                ~duration=animationDuration,
                 ()
-            |]
-            [%bs.raw "{stopTogether: true}"];
+              ),
+              Animated.Timing.animate(
+                ~value=top,
+                ~toValue=
+                  `raw(
+                    Platform.os === Platform.IOS ?
+                      iosBarHeight +. float_of_int(listPadding) :
+                      statusOffset +. float_of_int(listPadding)
+                  ),
+                ~easing=easeIn,
+                ~duration=animationDuration,
+                ()
+              ),
+              Animated.Timing.animate(
+                ~value=width,
+                ~toValue=`raw(float_of_int(windowWidth)),
+                ~easing=easeIn,
+                ~duration=animationDuration,
+                ()
+              ),
+              Animated.Timing.animate(
+                ~value=height,
+                ~toValue=`raw(float_of_int(wh)),
+                ~easing=easeIn,
+                ~duration=animationDuration,
+                ()
+              )
+            |],
+            [%bs.raw "{stopTogether: true}"]
+          );
         /* Start animations */
-        Animated.CompositeAnimation.start
-          animationBatch
-          callback::(
-            fun _ => {
+        Animated.CompositeAnimation.start(
+          animationBatch,
+          ~callback=
+            (_) => {
               let _id =
-                Js.Global.setTimeout
-                  (
-                    fun _ => {
-                      onFinish (item, sourceItemDimensions, modalAnimationState);
-                      let _id =
-                        Js.Global.setTimeout
-                          (
-                            fun _ => {
-                              let animation =
-                                Animated.Timing.animate
-                                  value::contentOpacity
-                                  toValue::(`raw 1.)
-                                  easing::easeIn
-                                  duration::animationDuration
-                                  ();
-                              Animated.CompositeAnimation.start animation ()
-                            }
-                          )
-                          deferDuration;
-                      ()
-                    }
-                  )
-                  deferDuration;
+                Js.Global.setTimeout(
+                  (_) => {
+                    onFinish((item, sourceItemDimensions, modalAnimationState));
+                    let _id =
+                      Js.Global.setTimeout(
+                        (_) => {
+                          let animation =
+                            Animated.Timing.animate(
+                              ~value=contentOpacity,
+                              ~toValue=`raw(1.),
+                              ~easing=easeIn,
+                              ~duration=animationDuration,
+                              ()
+                            );
+                          Animated.CompositeAnimation.start(animation, ())
+                        },
+                        deferDuration
+                      );
+                    ()
+                  },
+                  deferDuration
+                );
               ()
-            }
-          )
+            },
           ()
+        )
       }
     )
   }
 };
 
-let animateCollapseModal
-    ::listOpacity
-    sourceItemDimensions::{width: sourceWidth, y: sourceY, height: sourceHeight}
-    modalAnimationState::{top, width, height, contentOpacity, backgroundOpacity}
-    ::onFinish => {
+let animateCollapseModal =
+    (
+      ~listOpacity,
+      ~sourceItemDimensions as {width: sourceWidth, y: sourceY, height: sourceHeight},
+      ~modalAnimationState as {top, width, height, contentOpacity, backgroundOpacity},
+      ~onFinish
+    ) => {
   let animationBatch =
-    Animated.parallel
+    Animated.parallel(
       [|
-        Animated.Timing.animate
-          value::listOpacity toValue::(`raw 1.) easing::easeIn duration::animationDuration (),
-        Animated.Timing.animate
-          value::contentOpacity toValue::(`raw 0.) easing::easeIn duration::animationDuration (),
-        Animated.Timing.animate
-          delay::(animationDuration *. 0.8)
-          value::backgroundOpacity
-          toValue::(`raw 0.)
-          easing::easeIn
-          duration::(animationDuration *. 0.2)
-          (),
-        Animated.Timing.animate
-          value::top toValue::(`raw sourceY) easing::easeIn duration::animationDuration (),
-        Animated.Timing.animate
-          value::width toValue::(`raw sourceWidth) easing::easeIn duration::animationDuration (),
-        Animated.Timing.animate
-          value::height toValue::(`raw sourceHeight) easing::easeIn duration::animationDuration ()
-      |]
-      {"stopTogether": Js.true_};
+        Animated.Timing.animate(
+          ~value=listOpacity,
+          ~toValue=`raw(1.),
+          ~easing=easeIn,
+          ~duration=animationDuration,
+          ()
+        ),
+        Animated.Timing.animate(
+          ~value=contentOpacity,
+          ~toValue=`raw(0.),
+          ~easing=easeIn,
+          ~duration=animationDuration,
+          ()
+        ),
+        Animated.Timing.animate(
+          ~delay=animationDuration *. 0.8,
+          ~value=backgroundOpacity,
+          ~toValue=`raw(0.),
+          ~easing=easeIn,
+          ~duration=animationDuration *. 0.2,
+          ()
+        ),
+        Animated.Timing.animate(
+          ~value=top,
+          ~toValue=`raw(sourceY),
+          ~easing=easeIn,
+          ~duration=animationDuration,
+          ()
+        ),
+        Animated.Timing.animate(
+          ~value=width,
+          ~toValue=`raw(sourceWidth),
+          ~easing=easeIn,
+          ~duration=animationDuration,
+          ()
+        ),
+        Animated.Timing.animate(
+          ~value=height,
+          ~toValue=`raw(sourceHeight),
+          ~easing=easeIn,
+          ~duration=animationDuration,
+          ()
+        )
+      |],
+      {"stopTogether": Js.true_}
+    );
   /* Start animations */
-  Animated.CompositeAnimation.start
-    animationBatch
-    callback::(
-      fun _finished => {
+  Animated.CompositeAnimation.start(
+    animationBatch,
+    ~callback=
+      (_finished) => {
         let _ =
-          Js.Global.setTimeout
-            (
-              fun () => {
-                onFinish ();
-                Animated.CompositeAnimation.start
-                  (
-                    Animated.Timing.animate
-                      value::listOpacity
-                      toValue::(`raw 1.)
-                      easing::easeIn
-                      duration::animationDuration
-                      ()
-                  )
+          Js.Global.setTimeout(
+            () => {
+              onFinish();
+              Animated.CompositeAnimation.start(
+                Animated.Timing.animate(
+                  ~value=listOpacity,
+                  ~toValue=`raw(1.),
+                  ~easing=easeIn,
+                  ~duration=animationDuration,
                   ()
-              }
-            )
-            deferDuration;
+                ),
+                ()
+              )
+            },
+            deferDuration
+          );
         ()
-      }
-    )
+      },
     ()
+  )
 };
 
 /* Make */
-let make data::(data: Item.data) _children => {
-  let loading = Js.to_bool data##loading;
+let make = (~data: Item.data, _children) => {
+  let loading = Js.to_bool(data##loading);
   let error = data##error;
   let schedule =
     (
-      switch (Js.Null_undefined.to_opt data##allSchedules) {
+      switch (Js.Null_undefined.to_opt(data##allSchedules)) {
       | None => []
-      | Some arr => Array.to_list arr
+      | Some(arr) => Array.to_list(arr)
       }
-    ) |>
-    List.map Item.convert_from_js;
+    )
+    |> List.map(Item.convert_from_js);
   {
     ...component,
-    initialState: fun () => {
-      listOpacity: Animated.Value.create 1.,
+    reducer: (action, state) =>
+      switch action {
+      | Close =>
+        switch state.modalState {
+        | Expanded(item, sourceItemDimensions, modalState) =>
+          ReasonReact.Update({
+            ...state,
+            modalState: Collapsing(item, sourceItemDimensions, modalState)
+          })
+        | _ => failwith("TODO: this is impossible state")
+        }
+      | Expand(x, y, width, height, item, selectedIndex) =>
+        switch state.modalState {
+        | Closed =>
+          /* Handle target dimensions */
+          let fx = float_of_int(x);
+          let fy = float_of_int(y);
+          let fw = float_of_int(width);
+          let fh = float_of_int(height);
+          let targetDimensions = {x: fx, y: fy +. statusOffset, width: fw, height: fh};
+          let newAnimatedValue = (x) => Animated.Value.create(x);
+          ReasonReact.Update({
+            ...state,
+            modalState:
+              Expanding(
+                item,
+                targetDimensions,
+                {
+                  top: newAnimatedValue(fy +. statusOffset),
+                  left: newAnimatedValue(fx),
+                  width: newAnimatedValue(fw),
+                  height: newAnimatedValue(fh),
+                  contentOpacity: newAnimatedValue(0.),
+                  backgroundOpacity: newAnimatedValue(1.)
+                }
+              ),
+            selectedIndex
+          })
+        | _ => ReasonReact.NoUpdate
+        }
+      | ExpandFinish(item, sourceItemDimensions, modalAnimationState) =>
+        ReasonReact.Update({
+          ...state,
+          modalState: Expanded(item, sourceItemDimensions, modalAnimationState)
+        })
+      | CollapseFinish => ReasonReact.Update({...state, modalState: Closed})
+      },
+    initialState: () => {
+      listOpacity: Animated.Value.create(1.),
       modalState: Closed,
       selectedIndex: 0,
       listRef: None
     },
-    didUpdate:
-      fun {
-            oldSelf: {state: {modalState: oldModalState}},
-            newSelf: {state: {modalState: newModalState, listRef, listOpacity}, update}
-          } =>
-      switch (oldModalState, newModalState) {
-      | (Closed, Expanding item sourceItemDimensions modalAnimationState) =>
-        animateExpandModal
-          ::listRef
-          ::listOpacity
-          ::modalAnimationState
-          ::item
-          ::sourceItemDimensions
-          onFinish::(update onExpandAnimationFinish)
-      | (Expanded _ _ _, Collapsing _ sourceItemDimensions modalAnimationState) =>
-        animateCollapseModal
-          ::listOpacity
-          ::sourceItemDimensions
-          ::modalAnimationState
-          onFinish::(update onCollapseAnimationFinish)
+    didUpdate: ({oldSelf, newSelf}) =>
+      switch (oldSelf.state.modalState, newSelf.state.modalState) {
+      | (Closed, Expanding(item, sourceItemDimensions, modalAnimationState)) =>
+        animateExpandModal(
+          ~listRef=newSelf.state.listRef,
+          ~listOpacity=newSelf.state.listOpacity,
+          ~modalAnimationState,
+          ~item,
+          ~sourceItemDimensions,
+          ~onFinish=newSelf.reduce(onExpandAnimationFinish)
+        )
+      | (Expanded(_, _, _), Collapsing(_, sourceItemDimensions, modalAnimationState)) =>
+        animateCollapseModal(
+          ~listOpacity=newSelf.state.listOpacity,
+          ~sourceItemDimensions,
+          ~modalAnimationState,
+          ~onFinish=newSelf.reduce(onCollapseAnimationFinish)
+        )
       | (_, _) => ()
       },
-    render: fun self =>
+    render: (self) =>
       <View style=styles##container>
         <StatusBar backgroundColor="#ffffff" barStyle=`lightContent />
-        <Animated.View style=Style.(style [opacityAnimated self.state.listOpacity, flex 1.])>
-          <View ref=(self.handle setRef) style=styles##scrollView collapsable=false>
+        <Animated.View style=Style.(style([opacityAnimated(self.state.listOpacity), flex(1.)]))>
+          <View ref=(self.handle(setRef)) style=styles##scrollView collapsable=false>
             <ScrollView
               scrollEnabled=(
                 switch self.state.modalState {
@@ -342,65 +381,77 @@ let make data::(data: Item.data) _children => {
               )
               style=styles##scrollView
               stickyHeaderIndices=(
-                loading == false ? [1, Utils.getIndexFromSchedule schedule] : []
+                loading == false ? [1, Utils.getIndexFromSchedule(schedule)] : []
               )
               contentContainerStyle=styles##contentContainer>
               <Image
-                source=Image.(Required (Packager.require "../../../static/banner.png"))
+                source=Image.(Required(Packager.require("../../../static/banner.png")))
                 style=styles##banner
                 resizeMode=`cover
               />
               (
                 loading == true ?
-                  <View style=Style.(style [flex 1., alignItems `center, justifyContent `center])>
+                  <View
+                    style=Style.(style([flex(1.), alignItems(`center), justifyContent(`center)]))>
                     <ActivityIndicator />
                   </View> :
                   (
-                    switch (Js.Null_undefined.to_opt error) {
+                    switch (Js.Null_undefined.to_opt(error)) {
                     | None =>
-                      Utils.getUniqueDates schedule |>
-                      List.map (
-                        fun date =>
-                          List.concat [
-                            [
-                              <View key=date style=styles##dateWrap>
-                                <Text
-                                  style=styles##date
-                                  value=(
-                                    String.uppercase
-                                      Moment.(moment date |> Moment.format "dddd, MMMM Do")
-                                  )
-                                />
-                              </View>
-                            ],
-                            List.mapi
-                              (
-                                fun index (item: Item.t) =>
-                                  switch item.talk {
-                                  | None => <ScheduleItem item key=item.id />
-                                  | Some talk =>
-                                    <TalkItem
-                                      item
-                                      talk
-                                      index
-                                      selectedIndex=self.state.selectedIndex
-                                      modalOpen=(
-                                        switch self.state.modalState {
-                                        | Expanded _ _ _ => true
-                                        | _ => false
-                                        }
-                                      )
-                                      key=item.id
-                                      onPress=(self.update startExpandingModal)
-                                    />
-                                  }
-                              )
-                              (Utils.getScheduleForDate schedule date)
-                          ]
-                      ) |> List.concat |> Array.of_list |> ReasonReact.arrayToElement
-                    | Some e =>
+                      Utils.getUniqueDates(schedule)
+                      |> List.map(
+                           (date) =>
+                             List.concat([
+                               [
+                                 <View key=date style=styles##dateWrap>
+                                   <Text
+                                     style=styles##date
+                                     value=(
+                                       String.uppercase(
+                                         Moment.(moment(date) |> Moment.format("dddd, MMMM Do"))
+                                       )
+                                     )
+                                   />
+                                 </View>
+                               ],
+                               List.mapi(
+                                 (index, item: Item.t) =>
+                                   switch item.talk {
+                                   | None => <ScheduleItem item key=item.id />
+                                   | Some(talk) =>
+                                     <TalkItem
+                                       item
+                                       talk
+                                       index
+                                       selectedIndex=self.state.selectedIndex
+                                       modalOpen=(
+                                         switch self.state.modalState {
+                                         | Expanded(_, _, _) => true
+                                         | _ => false
+                                         }
+                                       )
+                                       key=item.id
+                                       onPress=(
+                                         (x, y, width, height, item, index) =>
+                                           self.reduce(
+                                             (_) => startExpand(x, y, width, height, item, index),
+                                             ()
+                                           )
+                                       )
+                                     />
+                                   },
+                                 Utils.getScheduleForDate(schedule, date)
+                               )
+                             ])
+                         )
+                      |> List.concat
+                      |> Array.of_list
+                      |> ReasonReact.arrayToElement
+                    | Some(e) =>
                       <View
-                        style=Style.(style [flex 1., alignItems `center, justifyContent `center])>
+                        style=Style.(
+                                style([flex(1.), alignItems(`center), justifyContent(`center)])
+                              )>
                         <Text value=e##message />
                       </View>
                     }
@@ -418,9 +469,9 @@ let make data::(data: Item.data) _children => {
                 because top, left, height, and width were
                 shadowed by values from Style module
              */
-          | Collapsing item _ modalAnimationState
-          | Expanding item _ modalAnimationState
-          | Expanded item _ modalAnimationState =>
+          | Collapsing(item, _, modalAnimationState)
+          | Expanding(item, _, modalAnimationState)
+          | Expanded(item, _, modalAnimationState) =>
             let {
               top: top',
               left: left',
@@ -431,17 +482,17 @@ let make data::(data: Item.data) _children => {
             } = modalAnimationState;
             <Animated.View
               style=Style.(
-                      concat [
+                      concat([
                         styles##modal,
-                        style [
-                          position `absolute,
-                          topAnimated top',
-                          leftAnimated left',
-                          widthAnimated width',
-                          heightAnimated height',
-                          overflow `hidden
-                        ]
-                      ]
+                        style([
+                          position(`absolute),
+                          topAnimated(top'),
+                          leftAnimated(left'),
+                          widthAnimated(width'),
+                          heightAnimated(height'),
+                          overflow(`hidden)
+                        ])
+                      ])
                     )>
               <ItemModal
                 contentOpacity
@@ -449,11 +500,11 @@ let make data::(data: Item.data) _children => {
                 item
                 expanded=(
                   switch self.state.modalState {
-                  | Expanded _ _ _ => true
+                  | Expanded(_, _, _) => true
                   | _ => false
                   }
                 )
-                onClose=(self.update startCollapsingModal)
+                onClose=(self.reduce(startClose))
               />
             </Animated.View>
           }
@@ -463,6 +514,6 @@ let make data::(data: Item.data) _children => {
 };
 
 let wrappedComponent = {
-  module M = ReactApollo.CreateWrapper Item;
-  M.wrapComponent ::component ::make
+  module M = ReactApollo.CreateWrapper(Item);
+  M.wrapComponent(~component, ~make)
 };

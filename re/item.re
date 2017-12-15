@@ -1,5 +1,6 @@
 let query =
-  GraphQLTag.gql {|
+  GraphQLTag.gql(
+    {|
   query allSchedules {
     allSchedules {
       id
@@ -18,20 +19,36 @@ let query =
       title
     }
   }
-|};
+|}
+  );
 
 module ItemJS = {
-  type photo = Js.t {. secret : string};
-  type speaker = Js.t {. name : string, bio : string, photo : photo};
-  type talk = Js.t {. title : string, description : string, speakers : Js.Array.t speaker};
-  type t = Js.t {. id : string, start : string, talk : Js.null_undefined talk, title : string};
-  type data =
-    Js.t {
-      .
-      loading : Js.boolean,
-      error : Js.null_undefined (Js.t {. message : string}),
-      allSchedules : Js.null_undefined (array t)
-    };
+  type photo = {. "secret": string};
+  type speaker = {
+    .
+    "name": string,
+    "bio": string,
+    "photo": photo
+  };
+  type talk = {
+    .
+    "title": string,
+    "description": string,
+    "speakers": Js.Array.t(speaker)
+  };
+  type t = {
+    .
+    "id": string,
+    "start": string,
+    "talk": Js.null_undefined(talk),
+    "title": string
+  };
+  type data = {
+    .
+    "loading": Js.boolean,
+    "error": Js.null_undefined({. "message": string}),
+    "allSchedules": Js.null_undefined(array(t))
+  };
 };
 
 type speaker = {
@@ -43,34 +60,35 @@ type speaker = {
 type talk = {
   talkTitle: string,
   description: string,
-  speakers: array speaker
+  speakers: array(speaker)
 };
 
 type t = {
   id: string,
   start: string,
-  talk: option talk,
+  talk: option(talk),
   title: string
 };
 
-let convert_speaker (s: ItemJS.speaker) => {name: s##name, bio: s##bio, photo: s##photo##secret};
+let convert_speaker = (s: ItemJS.speaker) => {name: s##name, bio: s##bio, photo: s##photo##secret};
 
-let convert_talk (t: ItemJS.talk) => {
+let convert_talk = (t: ItemJS.talk) => {
   talkTitle: t##title,
   description: t##description,
-  speakers: Array.map convert_speaker t##speakers
+  speakers: Array.map(convert_speaker, t##speakers)
 };
 
-let convert_from_js (t: ItemJS.t) => {
+let convert_from_js = (t: ItemJS.t) => {
   id: t##id,
   start: t##start,
   talk:
-    switch (Js.Null_undefined.to_opt t##talk) {
+    switch (Js.Null_undefined.to_opt(t##talk)) {
     | None => None
-    | Some talk_js => Some (convert_talk talk_js)
+    | Some(talk_js) => Some(convert_talk(talk_js))
     },
   title: t##title
 };
 
 type t_js = ItemJS.t;
+
 type data = ItemJS.data;

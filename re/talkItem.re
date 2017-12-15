@@ -1,59 +1,63 @@
 open ReactNative;
 
-type _state = {mutable elementRef: option ReasonReact.reactRef};
+type state = {elementRef: ref(option(ReasonReact.reactRef))};
 
-let setRef theRef {ReasonReact.state: state} => state.elementRef = Js.Null.to_opt theRef;
+let setElementRef = (theRef, {ReasonReact.state}) => state.elementRef := Js.Null.to_opt(theRef);
 
 let styles =
-  StyleSheet.create
+  StyleSheet.create(
     Style.(
       {
         "item":
-          style [
-            flex 1.,
-            backgroundColor "rgb(75, 118, 134)",
-            marginHorizontal 10.,
-            marginTop 10.,
-            borderWidth 1.,
-            borderColor "rgb(137, 167, 177)"
-          ],
-        "row": style [flexDirection `row],
-        "titleWrap": style [flex 1., padding 10.]
+          style([
+            flex(1.),
+            backgroundColor("rgb(75, 118, 134)"),
+            marginHorizontal(10.),
+            marginTop(10.),
+            borderWidth(1.),
+            borderColor("rgb(137, 167, 177)")
+          ]),
+        "row": style([flexDirection(`row)]),
+        "titleWrap": style([flex(1.), padding(10.)])
       }
-    );
+    )
+  );
 
-let component = ReasonReact.statefulComponent "TalkItem";
+let component = ReasonReact.reducerComponent("TalkItem");
 
-let make
-    item::({Item.start: start} as item)
-    talk::({Item.talkTitle: talkTitle} as talk)
-    index::(index: int)
-    modalOpen::(modalOpen: bool)
-    selectedIndex::(selectedIndex: int)
-    ::onPress
-    _children => {
+let make =
+    (
+      ~item as {Item.start} as item,
+      ~talk as {Item.talkTitle} as talk,
+      ~index: int,
+      ~modalOpen: bool,
+      ~selectedIndex: int,
+      ~onPress,
+      _children
+    ) => {
   ...component,
-  initialState: fun () => {elementRef: None},
-  render: fun self =>
+  reducer: ((), _) => ReasonReact.NoUpdate,
+  initialState: () => {elementRef: ref(None)},
+  render: (self) =>
     <TouchableOpacity
       onPress=(
-        fun _ =>
-          switch self.state.elementRef {
+        (_) =>
+          switch self.state.elementRef^ {
           | None => ()
-          | Some r =>
-            (ReasonReact.refToJsObj r)##measureInWindow (
-              fun x y width height => onPress (x, y, width, height, item, index)
+          | Some(r) =>
+            ReasonReact.refToJsObj(r)##measureInWindow(
+              (x, y, width, height) => onPress(x, y, width, height, item, index)
             )
           }
       )>
       <View
         style=Style.(
-                concat [
+                concat([
                   styles##item,
-                  style [opacity (modalOpen && index === selectedIndex ? 0. : 1.)]
-                ]
+                  style([opacity(modalOpen && index === selectedIndex ? 0. : 1.)])
+                ])
               )
-        ref=(self.handle setRef)>
+        ref=(self.handle(setElementRef))>
         <View style=styles##row>
           <View style=styles##titleWrap> <ScheduleTitle talkTitle /> <SpeakerNames talk /> </View>
           <SpeakerImages talk />

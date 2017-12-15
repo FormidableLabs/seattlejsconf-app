@@ -1,9 +1,9 @@
 module Moment = {
   type t;
-  external format : string => string = "" [@@bs.send.pipe : t];
-  external utcOffset : string => t = "" [@@bs.send.pipe : t];
+  [@bs.send.pipe : t] external format : string => string = "";
+  [@bs.send.pipe : t] external utcOffset : string => t = "";
 };
 
-external _moment : string => Moment.t = "moment" [@@bs.module];
+[@bs.module] external _moment : string => Moment.t = "moment";
 
-let moment value => _moment value;
+let moment = (value) => _moment(value);

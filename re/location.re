@@ -1,7 +1,7 @@
 open ReactNative;
 
 /* Variables */
-let windowWidth = (Dimensions.get `window)##width;
+let windowWidth = Dimensions.get(`window)##width;
 
 let initialRegion = {
   "latitude": 47.651857,
@@ -17,92 +17,92 @@ let iosDirections = "http://maps.apple.com/?daddr=47.651857,-122.3552919";
 let androidDirections = "http://maps.google.com/maps?daddr=47.651857,-122.3552919";
 
 /* Methods */
-let getDirections _ =>
-  if (PlatformRe.os === PlatformRe.IOS) {
-    Link.openURL iosDirections
+let getDirections = () =>
+  if (Platform.os === Platform.IOS) {
+    Link.openURL(iosDirections)
   } else {
-    Link.openURL androidDirections
+    Link.openURL(androidDirections)
   };
 
 /* Component */
-let component = ReasonReact.statelessComponent "Location";
+let component = ReasonReact.statelessComponent("Location");
 
 /* Styles */
 let styles =
-  StyleSheet.create
+  StyleSheet.create(
     Style.(
       {
-        "container": style [flex 1., backgroundColor "rgb(54, 97, 115)"],
+        "container": style([flex(1.), backgroundColor("rgb(54, 97, 115)")]),
         "contentContainer":
-          style [
-            alignItems `stretch,
-            justifyContent `center,
-            paddingTop (
-              PlatformRe.os === PlatformRe.IOS ?
-                20. : float_of_int StatBar.constants##currentHeight
+          style([
+            alignItems(`stretch),
+            justifyContent(`center),
+            paddingTop(
+              Platform.os === Platform.IOS ? 20. : float_of_int(StatBar.constants##currentHeight)
             )
-          ],
+          ]),
         "mapview":
-          style [
-            width (float_of_int windowWidth),
-            height (float_of_int windowWidth *. 0.656),
-            marginBottom 10.
-          ],
+          style([
+            width(float_of_int(windowWidth)),
+            height(float_of_int(windowWidth) *. 0.656),
+            marginBottom(10.)
+          ]),
         "foundry":
-          style [
-            width (float_of_int windowWidth -. 20.),
-            height (float_of_int windowWidth *. 0.569)
-          ],
-        "row": style [flex 1., flexDirection `column],
-        "contentWrapper": style [padding 10., marginTop 10.],
+          style([
+            width(float_of_int(windowWidth) -. 20.),
+            height(float_of_int(windowWidth) *. 0.569)
+          ]),
+        "row": style([flex(1.), flexDirection(`column)]),
+        "contentWrapper": style([padding(10.), marginTop(10.)]),
         "text":
-          style [
-            fontFamily "open-sans",
-            fontSize 18.,
-            color "white",
-            textAlign `center,
-            backgroundColor "transparent"
-          ],
+          style([
+            fontFamily("open-sans"),
+            fontSize(18.),
+            color("white"),
+            textAlign(`center),
+            backgroundColor("transparent")
+          ]),
         "button":
-          style [
-            backgroundColor "rgb(140, 170, 29)",
-            padding 10.,
-            margin 10.,
-            borderRadius 24.,
-            flex 0.
-          ],
+          style([
+            backgroundColor("rgb(140, 170, 29)"),
+            padding(10.),
+            margin(10.),
+            borderRadius(24.),
+            flex(0.)
+          ]),
         "boldText":
-          style [
-            fontFamily "open-sans-bold",
-            fontSize 18.,
-            color "white",
-            backgroundColor "transparent",
-            marginBottom 20.
-          ],
+          style([
+            fontFamily("open-sans-bold"),
+            fontSize(18.),
+            color("white"),
+            backgroundColor("transparent"),
+            marginBottom(20.)
+          ]),
         "regularText":
-          style [
-            fontFamily "open-sans",
-            fontSize 15.,
-            color "white",
-            backgroundColor "transparent",
-            marginBottom 20.
-          ]
+          style([
+            fontFamily("open-sans"),
+            fontSize(15.),
+            color("white"),
+            backgroundColor("transparent"),
+            marginBottom(20.)
+          ])
       }
-    );
+    )
+  );
 
 /* Make */
-let make _ _children => {
+let make = (_, _children) => {
   ...component,
-  render: fun _self =>
+  render: (_self) =>
     <ScrollView style=styles##container>
       <View style=styles##contentContainer>
         <MapView initialRegion style=styles##mapview>
           <MapView.Marker
             title="Fremont Foundry"
             image=(
-              PlatformRe.os === PlatformRe.IOS ?
-                Packager.require "../../../static/pin.png" :
-                Packager.require "../../../static/pin_small.png"
+              Platform.os === Platform.IOS ?
+                Packager.require("../../../static/pin.png") :
+                Packager.require("../../../static/pin_small.png")
             )
             coordinate
           />
@@ -118,7 +118,7 @@ let make _ _children => {
             value="SeattleJS's inaugural annual conference will be located at the beautiful and unique Fremont Foundry, located at 154 North 35th Street, Seattle, WA 98103."
           />
           <Image
-            source=Image.(Required (Packager.require "../../../static/foundry.jpg"))
+            source=Image.(Required(Packager.require("../../../static/foundry.jpg")))
             style=styles##foundry
             resizeMode=`cover
           />
@@ -128,4 +128,4 @@ let make _ _children => {
 };
 
 /* JS Export */
-let jsComponent = ReasonReact.wrapReasonForJs ::component (fun _props => make () [||]);
+let jsComponent = ReasonReact.wrapReasonForJs(~component, (_props) => make((), [||]));

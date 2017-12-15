@@ -1,1 +1,1 @@
-external openURL : string => unit = "openURL" [@@bs.module "react-native"] [@@bs.scope "Linking"];
+[@bs.module "react-native"] [@bs.scope "Linking"] external openURL : string => unit = "openURL";
