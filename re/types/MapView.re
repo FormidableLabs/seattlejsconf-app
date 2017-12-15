@@ -1,24 +1,36 @@
-type region =
-  Js.t {. latitude : float, longitude : float, latitudeDelta : float, longitudeDelta : float};
+type region = {
+  .
+  "latitude": float, "longitude": float, "latitudeDelta": float, "longitudeDelta": float
+};
 
-external mapview : ReasonReact.reactClass = "MapView" [@@bs.module "expo"];
+[@bs.module "expo"] external mapview : ReasonReact.reactClass = "MapView";
 
-let make initialRegion::(initialRegion: region) ::style=? children =>
-  ReasonReact.wrapJsForReason
-    reactClass::mapview props::{"initialRegion": initialRegion, "style": style} children;
+let option_map = (fn, opt_value) =>
+  switch opt_value {
+  | None => None
+  | Some(value) => Some(fn(value))
+  };
+
+let make = (~initialRegion: region, ~style=?, children) =>
+  ReasonReact.wrapJsForReason(
+    ~reactClass=mapview,
+    ~props={"initialRegion": initialRegion, "style": style},
+    children
+  );
 
 module Marker = {
-  type latLng = Js.t {. latitude : float, longitude : float};
+  type latLng = {. "latitude": float, "longitude": float};
   type rawImageSourceJS;
   external rawImageSourceJS : 'a => rawImageSourceJS = "%identity";
-  external marker : ReasonReact.reactClass = "Marker" [@@bs.module "expo"] [@@bs.scope "MapView"];
-  let make coordinate::(coordinate: latLng) title::(title: string) ::image=? children =>
-    ReasonReact.wrapJsForReason
-      reactClass::marker
-      props::{
+  [@bs.module "expo"] [@bs.scope "MapView"] external marker : ReasonReact.reactClass = "Marker";
+  let make = (~coordinate: latLng, ~title: string, ~image=?, children) =>
+    ReasonReact.wrapJsForReason(
+      ~reactClass=marker,
+      ~props={
         "coordinate": coordinate,
         "title": title,
-        "image": Js.Undefined.from_opt (UtilsRN.option_map rawImageSourceJS image)
-      }
-      children;
+        "image": Js.Undefined.from_opt(option_map(rawImageSourceJS, image))
+      },
+      children
+    );
 };

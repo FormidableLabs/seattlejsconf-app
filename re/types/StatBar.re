@@ -1,3 +1,3 @@
-type statBar = Js.t {. currentHeight : int};
+type statBar = {. "currentHeight": int};
 
-external constants : statBar = "StatusBar" [@@bs.module "react-native"];
+[@bs.module "react-native"] external constants : statBar = "StatusBar";

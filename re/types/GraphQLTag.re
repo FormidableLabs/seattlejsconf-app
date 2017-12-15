@@ -1,27 +1,45 @@
-type selection =
-  Js.t {
+type selection = {
+  .
+  "alias": string,
+  "arguments": Js.Array.t(string),
+  "directives": Js.Array.t(string),
+  "kind": string,
+  "name": {
     .
-    alias : string,
-    arguments : Js.Array.t string,
-    directives : Js.Array.t string,
-    kind : string,
-    name : Js.t {. kind : string, value : string},
-    selectionSet : Js.t {. kind : string, selections : Js.Array.t selection}
-  };
-
-type definition =
-  Js.t {
+    "kind": string,
+    "value": string
+  },
+  "selectionSet": {
     .
-    directives : Js.Array.t string,
-    name : Js.t {. kind : string, value : string},
-    operation : string,
-    selectionSet : Js.t {. kind : string, selections : Js.Array.t selection},
-    loc : Js.t {. _end : int, start : int},
-    kind : string
-  };
+    "kind": string,
+    "selections": Js.Array.t(selection)
+  }
+};
 
-type definitions = Js.Array.t definition;
+type definition = {
+  .
+  "directives": Js.Array.t(string),
+  "name": {
+    .
+    "kind": string,
+    "value": string
+  },
+  "operation": string,
+  "selectionSet": {
+    .
+    "kind": string,
+    "selections": Js.Array.t(selection)
+  },
+  "loc": {
+    .
+    "_end": int,
+    "start": int
+  },
+  "kind": string
+};
 
-external _gql : string => definitions = "default" [@@bs.module "graphql-tag"];
+type definitions = Js.Array.t(definition);
 
-let gql query => _gql query;
+[@bs.module "graphql-tag"] external _gql : string => definitions = "default";
+
+let gql = (query) => _gql(query);

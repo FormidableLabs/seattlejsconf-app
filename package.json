@@ -3,9 +3,9 @@
   "version": "0.1.1",
   "private": true,
   "devDependencies": {
-    "jest-expo": "~18.0.0",
-    "react-native-scripts": "0.0.50",
-    "react-test-renderer": "16.0.0-alpha.12"
+    "jest-expo": "~23.0.0",
+    "react-native-scripts": "1.8.1",
+    "react-test-renderer": "16.0.0"
   },
   "main": "./node_modules/react-native-scripts/build/bin/crna-entry.js",
   "scripts": {
@@ -22,16 +22,16 @@
   },
   "dependencies": {
     "apollo-client": "^1.9.0-0",
-    "bs-platform": "^1.8.2",
-    "bs-react-native": "https://github.com/BuckleTypes/bs-react-native.git",
-    "expo": "^18.0.3",
+    "bs-platform": "^2.1.0",
+    "bs-react-native": "^0.3.0",
+    "expo": "^23.0.4",
     "graphql-tag": "^2.4.2",
     "moment": "^2.18.1",
-    "react": "16.0.0-alpha.12",
+    "react": "16.0.0",
     "react-apollo": "^1.4.7",
-    "react-native": "^0.45.1",
-    "react-navigation": "^1.0.0-beta.11",
-    "reason-react": "^0.2.3",
+    "react-native": "0.50.3",
+    "react-navigation": "^1.0.0-beta.17",
+    "reason-react": "0.2.4",
     "redux": "^3.7.2",
     "redux-offline": "^2.0.0"
   }

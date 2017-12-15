@@ -4,14 +4,11 @@
     "react-jsx": 2
   },
   "bs-dependencies": ["bs-react-native", "reason-react"],
+  "refmt": 3,
   "sources": [
     {
       "dir": "re",
-      "subdirs": [
-        {
-          "dir": "types"
-        }
-      ]
+      "subdirs": ["types"]
     }
   ]
 }

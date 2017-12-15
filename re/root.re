@@ -1,13 +1,13 @@
 open ReactNative;
 
-let scheduleIcon config =>
-  <Icon name="calendar" size=36 color=config##tintColor style=Style.(style [marginTop 5.]) />;
+let scheduleIcon = (config) =>
+  <Icon name="calendar" size=36 color=config##tintColor style=Style.(style([marginTop(5.)])) />;
 
-let locationIcon config =>
-  <Icon name="location" size=36 color=config##tintColor style=Style.(style [marginTop 5.]) />;
+let locationIcon = (config) =>
+  <Icon name="location" size=36 color=config##tintColor style=Style.(style([marginTop(5.)])) />;
 
-let infoIcon config =>
-  <Icon name="question" size=36 color=config##tintColor style=Style.(style [marginTop 5.]) />;
+let infoIcon = (config) =>
+  <Icon name="question" size=36 color=config##tintColor style=Style.(style([marginTop(5.)])) />;
 
 let routeConfig: TabNavigator.routesConfig = {
   "schedule": {
@@ -36,4 +36,4 @@ let navConfig: TabNavigator.navConfig = {
   "tabBarComponent": TabNavigator.tabBarBottom
 };
 
-let component = TabNavigator.create ::routeConfig ::navConfig;
+let component = TabNavigator.create(~routeConfig, ~navConfig);
